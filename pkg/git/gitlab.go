@@ -2,9 +2,7 @@ package git
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/blang/semver"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -76,7 +74,7 @@ func (g *Gitlab) GetAllTags(pid string) (*TagMap, error) {
 		}
 
 		for _, p := range ps {
-			name, version := g.parseVersion(p.Name)
+			name, version := parseVersion(&p.Name)
 			// Skip weird tags
 			if version == nil {
 				continue
@@ -100,20 +98,6 @@ func (g *Gitlab) GetAllTags(pid string) (*TagMap, error) {
 		page += 1
 	}
 	return &tagMap, nil
-}
-
-func (g *Gitlab) parseVersion(name string) (*string, *semver.Version) {
-	ss := strings.Split(name, "-v")
-	if len(ss) != 2 {
-		return nil, nil
-	}
-
-	version, err := semver.Make(ss[1])
-	if err != nil {
-		return nil, nil
-	}
-
-	return &ss[0], &version
 }
 
 // utility to return a pointer to a bool for optional parameters

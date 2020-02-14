@@ -8,7 +8,7 @@ import (
 	"github.com/blang/semver"
 	"github.com/gosuri/uitable"
 
-	"gitlab-components-tags/internal/git"
+	"monorepo-components-tags/pkg/git"
 )
 
 var loc *time.Location
@@ -27,7 +27,11 @@ type Component struct {
 type ComponentMap map[string]Component
 
 func (c *Component) String() string {
-	return fmt.Sprintf("%s-%s (%s)", c.Name, c.Version.String(), c.CommittedDate.In(loc).Format(time.RFC3339))
+	if c.CommittedDate != nil {
+		return fmt.Sprintf("%s-%s (%s)", c.Name, c.Version.String(), c.CommittedDate.In(loc).Format(time.RFC3339))
+
+	}
+	return fmt.Sprintf("%s-%s (-)", c.Name, c.Version.String())
 }
 
 func (m ComponentMap) String() string {
@@ -41,6 +45,9 @@ func (m ComponentMap) String() string {
 	}
 
 	sort.SliceStable(list, func(i, j int) bool {
+		if list[i].CommittedDate == nil || list[j].CommittedDate == nil {
+			return true
+		}
 		if list[i].CommittedDate.Unix() == list[j].CommittedDate.Unix() {
 			return list[i].Version.GTE(list[j].Version)
 		}
@@ -49,7 +56,11 @@ func (m ComponentMap) String() string {
 
 	table.AddRow("Component", "Version", "Date", "Commit")
 	for _, c := range list {
-		table.AddRow(c.Name, c.Version.String(), c.CommittedDate.In(loc).Format(time.RFC3339), c.ShortID)
+		date := ""
+		if c.CommittedDate != nil {
+			date = c.CommittedDate.In(loc).Format(time.RFC3339)
+		}
+		table.AddRow(c.Name, c.Version.String(), date, c.ShortID)
 	}
 	return table.String()
 }
