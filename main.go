@@ -1,70 +1,52 @@
 package main
 
 import (
-	"flag"
+	"errors"
 	"fmt"
 	"os"
-	"strings"
-	"sync"
 
-	"gitlab-components-tags/components"
-	"gitlab-components-tags/git"
+	"github.com/urfave/cli/v2"
+
+	"gitlab-components-tags/cmd"
 )
 
-var projectID string
-var fromCommit string
-var varPrefix string
-var exportVars bool
-var wg sync.WaitGroup
+var (
+	ErrMissingGitlabToken = errors.New("missing GITLAB_TOKEN environment variable")
+)
 
 func main() {
-	gitlabBaseUrl := ""
-	fromCommit = ""
-	exportVars = false
+	app := &cli.App{
+		Name:     "gitlab-components-tags",
+		Usage:    "get components tags from gitlab",
+		Version:  "v1.0.0",
+		HideHelp: true,
+		Before: func(c *cli.Context) error {
+			if c.Bool("help") {
+				cli.ShowAppHelpAndExit(c, 0)
+				return nil
+			}
+			token := os.Getenv("GITLAB_TOKEN")
+			if token == "" {
+				return ErrMissingGitlabToken
+			}
 
-	gitlabToken := os.Getenv("GITLAB_TOKEN")
-	if gitlabToken == "" {
-		fmt.Println("Missing GITLAB_TOKEN environment variable")
+			_ = c.Set("token", token)
+			return nil
+		},
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "project", Required: true, Aliases: []string{"p"}, Usage: "Gitlab ProjectID (required)"},
+			&cli.StringFlag{Name: "commit", Usage: "Short ID commit from where to start the search"},
+			&cli.StringFlag{Name: "base-url", Usage: "Gitlab base url", DefaultText: "https://gitlab.com/api/v4"},
+			&cli.StringFlag{Name: "prefix", Usage: "Add prefix to exported names"},
+			&cli.BoolFlag{Name: "export-shell", Aliases: []string{"e"}, Usage: "format output as shell variables"},
+			&cli.BoolFlag{Name: "help", Aliases: []string{"h"}},
+		},
+		Action: cmd.ComponentsTags,
+	}
+
+	err := app.Run(os.Args)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
 		os.Exit(-1)
 	}
-
-	flag.StringVar(&projectID, "project", "", "Gitlab Project Id")
-	flag.StringVar(&gitlabBaseUrl, "base-url", "", "Gitlab base URL")
-	flag.StringVar(&fromCommit, "commit", "", "Pick your commit")
-	flag.BoolVar(&exportVars, "export-shell", false, "Export as shell environment vars")
-	flag.StringVar(&varPrefix, "prefix", "", "Env vars prefix")
-	flag.Parse()
-
-	var allCommits []*git.Commit
-	var tags git.TagMap
-
-	g := git.NewGitlab(gitlabToken, gitlabBaseUrl)
-	do(&wg, func() { tags = g.GetAllTags(projectID) })
-	do(&wg, func() { allCommits = g.GetAllCommits(projectID) })
-	wg.Wait()
-
-	list := components.MakeList(allCommits, tags, fromCommit)
-
-	if exportVars {
-		if varPrefix != "" {
-			varPrefix = strings.ToUpper(varPrefix) + "_"
-		}
-		for _, c := range list {
-			fmt.Printf("export %s%s_VERSION=\"%s\"\n", varPrefix, toEnvVar(c.Name), c.Version)
-		}
-	} else {
-		fmt.Println(list)
-	}
-}
-
-func toEnvVar(s string) string {
-	return strings.ToUpper(strings.ReplaceAll(s, "-", "_"))
-}
-
-func do(wg *sync.WaitGroup, fn func()) {
-	wg.Add(1)
-	go func() {
-		fn()
-		wg.Done()
-	}()
 }

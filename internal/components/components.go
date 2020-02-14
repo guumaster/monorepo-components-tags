@@ -8,7 +8,7 @@ import (
 	"github.com/blang/semver"
 	"github.com/gosuri/uitable"
 
-	"gitlab-components-tags/git"
+	"gitlab-components-tags/internal/git"
 )
 
 var loc *time.Location

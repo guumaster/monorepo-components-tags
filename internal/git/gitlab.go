@@ -1,7 +1,7 @@
 package git
 
 import (
-	"log"
+	"fmt"
 	"strings"
 
 	"github.com/blang/semver"
@@ -23,7 +23,7 @@ func NewGitlab(token, baseUrl string) *Gitlab {
 	}
 }
 
-func (g *Gitlab) GetAllCommits(pid string) []*Commit {
+func (g *Gitlab) GetAllCommits(pid string) ([]*Commit, error) {
 	var list []*Commit
 	page := 1
 	for {
@@ -36,7 +36,7 @@ func (g *Gitlab) GetAllCommits(pid string) []*Commit {
 			WithStats: g.bool(false),
 		})
 		if err != nil {
-			log.Fatal(err)
+			return nil, fmt.Errorf("error getting all commits: %w", err)
 		}
 
 		for _, c := range cms {
@@ -53,10 +53,10 @@ func (g *Gitlab) GetAllCommits(pid string) []*Commit {
 		page += 1
 	}
 
-	return list
+	return list, nil
 }
 
-func (g *Gitlab) GetAllTags(pid string) TagMap {
+func (g *Gitlab) GetAllTags(pid string) (*TagMap, error) {
 	sort := new(string)
 	*sort = "desc"
 
@@ -72,7 +72,7 @@ func (g *Gitlab) GetAllTags(pid string) TagMap {
 			Sort: sort,
 		})
 		if err != nil {
-			log.Fatal(err)
+			return nil, fmt.Errorf("error getting all tags: %w", err)
 		}
 
 		for _, p := range ps {
@@ -99,7 +99,7 @@ func (g *Gitlab) GetAllTags(pid string) TagMap {
 		}
 		page += 1
 	}
-	return tagMap
+	return &tagMap, nil
 }
 
 func (g *Gitlab) parseVersion(name string) (*string, *semver.Version) {
