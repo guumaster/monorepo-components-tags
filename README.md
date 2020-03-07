@@ -1,3 +1,7 @@
+[![GitHub Release](https://img.shields.io/github/release/guumaster/monorepo-components-tags.svg?logo=github&labelColor=262b30)](https://github.com/guumaster/monorepo-components-tags/releases)
+[![Go Report Card](https://goreportcard.com/badge/github.com/guumaster/monorepo-components-tags)](https://goreportcard.com/report/github.com/guumaster/monorepo-components-tags)
+[![License](https://img.shields.io/github/license/guumaster/monorepo-components-tags)](https://github.com/guumaster/monorepo-components-tags/LICENSE)
+
 # Monorepo Components Tags
 
 This small tool gets the latest tags of all components on your monorepo. You can pass a specific commit and it will
@@ -86,3 +90,23 @@ echo "${COMPONENT_A_VERSION}"
  `--suffix` Change suffix from 'VERSION' to different value (default: "VERSION")
 
  `--export-shell, -e` Prepare the output as shell environment variables to use directly on your shell
+
+
+### Dependencies & Refs
+
+  * [blang/semver](https://github.com/blang/semver)
+  * [urfave/cli](https://github.com/urfave/cli)
+  * [google/go-github](https://github.com/google/go-github)
+  * [xanzy/go-gitlab](https://github.com/xanzy/go-gitlab)
+  * [gosuri/uitable](https://github.com/gosuri/uitable)
+
+
+### LICENSE
+
+ [MIT license](LICENSE)
+
+
+
+### Author(s)
+
+* [guumaster](https://github.com/guumaster)
