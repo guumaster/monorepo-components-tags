@@ -65,7 +65,7 @@ export COMPONENT_C_VERSION="1.5.0"
 You can set the environment variables directly doing the following:
 
 ```
-$> eval $(gitlab-components-tags --project <YOUR_PROJECT_ID> --export-shell)
+$> eval $(monorepo-components-tags --project <YOUR_PROJECT_ID> --export-shell)
 
 echo "${COMPONENT_A_VERSION}"
 1.7.0
